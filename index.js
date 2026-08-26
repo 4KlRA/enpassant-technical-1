@@ -1,17 +1,16 @@
 const dns = require("dns");
+const express = require("express");
+const app = express();
+app.use(express.json());
+const connectDB = require("./src/config/db.js")
+const authRoutes = require("./src/routes/authRoutes.js");
+app.use("/", authRoutes);
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 
 require("dotenv").config();
-const connectDB = require("./src/config/db.js")
-
-const express = require("express");
-
-const app = express();
 
 const PORT = 5000;
-
-app.use(express.json());
 
 connectDB();
 
