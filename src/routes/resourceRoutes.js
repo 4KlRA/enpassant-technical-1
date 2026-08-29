@@ -1,16 +1,13 @@
 const express = require("express");
 const verifyToken = require("../config/verifyToken");
 const Resource = require("../models/Resource");
-const isAdmin = requiere("../config/isAdmin");
+const isAdmin = require("../config/isAdmin");
 
 const route = express.Router();
 
 route.get("/", verifyToken, async (req, res) => {
     try {
-        const resources = await Resource.findByID(req.params.id);
-        if(!resources) {
-            return res.status(404).json({message: "Resource not found"});
-        }
+        const resources = await Resource.find();
         res.status(200).json(resources);
     } catch (error) {
         res.status(500).json({message: "Server error", error: error});
@@ -19,7 +16,10 @@ route.get("/", verifyToken, async (req, res) => {
 
 route.get("/:id", verifyToken, async (req, res) => {
     try {
-        const resource = await Resource.find();
+        const resource = await Resource.findById(req.params.id);
+        if(!resource) {
+            return res.status(404).json({message: "Resource not found"});
+        }
         res.status(200).json(resource);
     } catch (error) {
         res.status(500).json({message: "Server error", error: error});
