@@ -1,8 +1,9 @@
 const express = require("express");
-const route = express.Router();
-const User = require("../models/User.js");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+
+const route = express.Router();
 
 route.post("/signup", async (req, res) => {
     try {
@@ -43,9 +44,33 @@ route.post("/login", async (req, res) => {
         if (!isPasswordValid) {
             return res.status (401).json({message: "Invalid password."});
         }
+        const token = jwt.sign({id: user._id, role: user.role}, process.env.JWT_SECRET, { expiresIn: "1d" });
+        res.status(200).json({ token });
     } catch (error) {
         res.status(500).json({message: "Server Issue"});
         console.log("Server Error: ", error)};
 });
 
+route.get("/me", (req, res, next) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if(!token) {
+        return res.status(401).json({message: "No token"})
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({message: "Token invalid"});
+    }
+},
+async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password")
+        res.status(200).json(user);
+    } catch(error) {
+        res.status(500).json(error);
+    }
+})
 module.exports = route;
