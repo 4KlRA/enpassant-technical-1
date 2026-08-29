@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const verifyToken = require("../config/verifyToken");
 
 const route = express.Router();
 
@@ -51,21 +52,7 @@ route.post("/login", async (req, res) => {
         console.log("Server Error: ", error)};
 });
 
-route.get("/me", (req, res, next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-    if(!token) {
-        return res.status(401).json({message: "No token"})
-    }
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({message: "Token invalid"});
-    }
-},
-async (req, res) => {
+route.get("/me", verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select("-password")
         res.status(200).json(user);
